@@ -97,3 +97,6 @@ USE_TZ = True
 STATIC_URL = 'static/'
 LOGIN_URL = '/admin/login/'  # Куда отправлять гостя, если нужна авторизация
 LOGIN_REDIRECT_URL = '/catalog/'  # Куда возвращать пользователя после успешного входа
+# Консольный бэкенд для тестирования отправки писем
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'shop@sport-accessories.com'

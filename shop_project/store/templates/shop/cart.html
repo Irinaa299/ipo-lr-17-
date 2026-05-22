@@ -72,6 +72,12 @@
         <div style="text-align: right; margin-top: 20px;">
             <h2>Общая стоимость заказа: <span style="color: #28a745;">{{ cart.total_price }} руб.</span></h2>
         </div>
+        <div style="text-align: right; margin-top: 20px;">
+            <a href="{% url 'checkout' %}" style="display: inline-block; background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-size: 1.1em; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                🚀 Оформить заказ (Ввод адреса) →
+            </a>
+        </div>
+        
     {% else %}
         <!-- Если корзина пуста -->
         <div style="background: #fff; padding: 40px; text-align: center; border: 1px solid #ddd; border-radius: 8px;">
