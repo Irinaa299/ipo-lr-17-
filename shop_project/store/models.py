@@ -1,8 +1,70 @@
 from django.db import models
-
-# Create your models here.
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
+
+# 1. Модель "Производитель"
+class Manufacturer(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Название")
+    country = models.CharField(max_length=100, verbose_name="Страна")
+    description = models.TextField(blank=True, null=True, verbose_name="Описание")
+
+    class Meta:
+        verbose_name = "Производитель"
+        verbose_name_plural = "Производители"
+
+    def __str__(self):
+        return self.name
+
+# 2. Модель "Категория товара"
+class Category(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Название")
+    description = models.TextField(blank=True, null=True, verbose_name="Описание")
+
+    class Meta:
+        verbose_name = "Категория товара"
+        verbose_name_plural = "Категории товаров"
+
+    def __str__(self):
+        return self.name
+
+# 3. Модель "Товар"
+class Product(models.Model):
+    title = models.CharField(max_length=200, verbose_name="Название")
+    description = models.TextField(verbose_name="Описание")
+    image = models.ImageField(upload_to='products/', blank=True, null=True, verbose_name="Фото товара")
+    
+    price = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        validators=[MinValueValidator(0.0)], 
+        verbose_name="Цена"
+    )
+    
+    stock_quantity = models.IntegerField(
+        validators=[MinValueValidator(0)], 
+        verbose_name="Количество на складе"
+    )
+    
+    category = models.ForeignKey(
+        Category, 
+        on_delete=models.CASCADE, 
+        related_name='products', 
+        verbose_name="Категория"
+    )
+    manufacturer = models.ForeignKey(
+        Manufacturer, 
+        on_delete=models.CASCADE, 
+        related_name='products', 
+        verbose_name="Производитель"
+    )
+
+    class Meta:
+        verbose_name = "Товар"
+        verbose_name_plural = "Товары"
+
+    def __str__(self):
+        return self.title
 
 # 4. Модель "Корзина"
 class Cart(models.Model):
@@ -26,9 +88,7 @@ class Cart(models.Model):
 
     @property
     def total_price(self):
-        """Вычисляет общую стоимость всех элементов в корзине"""
         return sum(item.item_total for item in self.items.all())
-
 
 # 5. Модель "Элемент корзины"
 class CartItem(models.Model):
@@ -58,11 +118,9 @@ class CartItem(models.Model):
 
     @property
     def item_total(self):
-        """Возвращает стоимость данного элемента (цена товара * количество)"""
         return self.product.price * self.quantity
 
     def clean(self):
-        """Валидация: количество товара не должно превышать остаток на складе"""
         super().clean()
         if self.product and self.quantity > self.product.stock_quantity:
             raise ValidationError({
@@ -70,6 +128,5 @@ class CartItem(models.Model):
             })
 
     def save(self, *args, **kwargs):
-        """Вызываем валидацию перед каждым сохранением в БД"""
         self.full_clean()
         super().save(*args, **kwargs)
