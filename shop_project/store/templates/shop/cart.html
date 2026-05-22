@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Моя корзина | Магазин спортивных товаров</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 30px; background: #fafafa;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>🛒 Ваша спортивная корзина</h1>
+        <a href="{% url 'product_list' %}" style="text-decoration: none; background: #0066cc; color: white; padding: 10px 15px; border-radius: 4px; font-weight: bold;">← В каталог</a>
+    </div>
+    
+    <br>
+
+    <!-- Вывод уведомлений об ошибках валидации склада или успехе -->
+    {% if messages %}
+        {% for message in messages %}
+            <div style="padding: 10px; margin-bottom: 15px; border-radius: 4px; background: {% if message.tags == 'error' %}#f8d7da; color: #721c24;{% else %}#d4edda; color: #155724;{% endif %};">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Проверяем, есть ли товары в корзине -->
+    {% if cart.items.all %}
+        <table style="width: 100%; background: #fff; border-collapse: collapse; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <thead>
+                <tr style="background: #eee; text-align: left;">
+                    <th style="padding: 12px; border: 1px solid #ddd;">Наименование товара</th>
+                    <th style="padding: 12px; border: 1px solid #ddd;">Количество</th>
+                    <th style="padding: 12px; border: 1px solid #ddd;">Цена за единицу</th>
+                    <th style="padding: 12px; border: 1px solid #ddd;">Стоимость элемента</th>
+                    <th style="padding: 12px; border: 1px solid #ddd;">Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart.items.all %}
+                    <tr>
+                        <!-- Название товара -->
+                        <td style="padding: 12px; border: 1px solid #ddd;">
+                            <b>{{ item.product.title }}</b>
+                            <div style="font-size: 0.8em; color: #888;">Остаток на складе: {{ item.product.stock_quantity }} шт.</div>
+                        </td>
+                        
+                        <!-- Форма обновления количества товара (Задание 3.3) -->
+                        <td style="padding: 12px; border: 1px solid #ddd;">
+                            <form method="post" action="{% url 'update_cart' item.id %}" style="display: flex; gap: 5px; align-items: center;">
+                                {% csrf_token %}
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" style="width: 60px; padding: 5px; text-align: center;">
+                                <button type="submit" title="Обновить количество" style="padding: 5px 8px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">💾</button>
+                            </form>
+                        </td>
+                        
+                        <!-- Цена за шт -->
+                        <td style="padding: 12px; border: 1px solid #ddd;">{{ item.product.price }} руб.</td>
+                        
+                        <!-- Стоимость элемента (вычисляемое свойство) -->
+                        <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold; color: #e44d26;">{{ item.item_total }} руб.</td>
+                        
+                        <!-- Форма / ссылка для удаления товара из корзины (Задание 3.3) -->
+                        <td style="padding: 12px; border: 1px solid #ddd;">
+                            <a href="{% url 'remove_from_cart' item.id %}" style="color: #dc3545; text-decoration: none; font-weight: bold;" onclick="return confirm('Удалить этот товар из корзины?')">❌ Удалить</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Общая стоимость всей корзины -->
+        <div style="text-align: right; margin-top: 20px;">
+            <h2>Общая стоимость заказа: <span style="color: #28a745;">{{ cart.total_price }} руб.</span></h2>
+        </div>
+    {% else %}
+        <!-- Если корзина пуста -->
+        <div style="background: #fff; padding: 40px; text-align: center; border: 1px solid #ddd; border-radius: 8px;">
+            <h3>Ваша спортивная корзина пуста 🎒</h3>
+            <p style="color: #666; margin-bottom: 20px;">Вы еще не добавили ни одного рюкзака, браслета или бутылки для воды.</p>
+            <a href="{% url 'product_list' %}" style="display: inline-block; background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">Выбрать аксессуары →</a>
+        </div>
+    {% endif %}
+
+</body>
+</html>

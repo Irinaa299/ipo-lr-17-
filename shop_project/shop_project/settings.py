@@ -44,7 +44,7 @@ ROOT_URLCONF = 'shop_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'store' / 'templates'],  
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -95,3 +95,5 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
+LOGIN_URL = '/admin/login/'  # Куда отправлять гостя, если нужна авторизация
+LOGIN_REDIRECT_URL = '/catalog/'  # Куда возвращать пользователя после успешного входа
