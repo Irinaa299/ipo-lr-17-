@@ -130,3 +130,80 @@ class CartItem(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+# 6. Модель "Заказ"
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'В обработке'),
+        ('confirmed', 'Подтвержден'),
+        ('shipped', 'Отправлен'),
+        ('delivered', 'Доставлен'),
+        ('cancelled', 'Отменен'),
+    ]
+    
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='orders', 
+        verbose_name="Пользователь"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, 
+        verbose_name="Дата создания"
+    )
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='pending', 
+        verbose_name="Статус"
+    )
+    total_price = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.00, 
+        verbose_name="Общая сумма"
+    )
+    address = models.TextField(
+        verbose_name="Адрес доставки"
+    )
+
+    class Meta:
+        verbose_name = "Заказ"
+        verbose_name_plural = "Заказы"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Заказ #{self.id} от {self.user.username}"
+
+
+# 7. Модель "Элемент заказа"
+class OrderItem(models.Model):
+    order = models.ForeignKey(
+        Order, 
+        on_delete=models.CASCADE, 
+        related_name='items', 
+        verbose_name="Заказ"
+    )
+    product = models.ForeignKey(
+        Product, 
+        on_delete=models.PROTECT, 
+        verbose_name="Товар"
+    )
+    quantity = models.PositiveIntegerField(
+        verbose_name="Количество"
+    )
+    price = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name="Цена на момент заказа"
+    )
+
+    class Meta:
+        verbose_name = "Элемент заказа"
+        verbose_name_plural = "Элементы заказа"
+
+    def __str__(self):
+        return f"{self.product.title} ({self.quantity} шт.)"
+
+    @property
+    def item_total(self):
+        return self.price * self.quantity

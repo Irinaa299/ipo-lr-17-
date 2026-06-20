@@ -194,3 +194,194 @@ def checkout(request):
         f"</div>"
         f"</body>"
     )
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from .models import Manufacturer, Category, Product, Cart, CartItem, Order, OrderItem
+from .serializers import (
+    ManufacturerSerializer, CategorySerializer, ProductSerializer,
+    CartSerializer, CartItemSerializer, OrderSerializer, OrderItemSerializer
+)
+
+
+# API для Производителей
+class ManufacturerViewSet(viewsets.ModelViewSet):
+    queryset = Manufacturer.objects.all()
+    serializer_class = ManufacturerSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+# API для Категорий
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+# API для Товаров
+from rest_framework import viewsets, permissions, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Manufacturer, Category, Product, Cart, CartItem, Order, OrderItem
+from .serializers import (
+    ManufacturerSerializer, CategorySerializer, ProductSerializer,
+    CartSerializer, CartItemSerializer, OrderSerializer, OrderItemSerializer
+)
+
+
+class ManufacturerViewSet(viewsets.ModelViewSet):
+    queryset = Manufacturer.objects.all()
+    serializer_class = ManufacturerSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['category', 'manufacturer']
+    search_fields = ['title', 'description']
+    ordering_fields = ['price', 'stock_quantity', 'title']
+    ordering = ['title']
+
+
+class CartViewSet(viewsets.ModelViewSet):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class CartItemViewSet(viewsets.ModelViewSet):
+    queryset = CartItem.objects.all()
+    serializer_class = CartItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class OrderItemViewSet(viewsets.ModelViewSet):
+    queryset = OrderItem.objects.all()
+    serializer_class = OrderItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+# API для Корзины
+class CartViewSet(viewsets.ModelViewSet):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Пользователь видит только свою корзину
+        if self.request.user.is_authenticated:
+            return Cart.objects.filter(user=self.request.user)
+        return Cart.objects.none()
+
+    def perform_create(self, serializer):
+        # Автоматически привязываем корзину к текущему пользователю
+        serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def add_item(self, request, pk=None):
+        """Добавить товар в корзину"""
+        cart = self.get_object()
+        product_id = request.data.get('product')
+        quantity = request.data.get('quantity', 1)
+        
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({'error': 'Товар не найден'}, status=status.HTTP_404_NOT_FOUND)
+        
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=cart,
+            product=product,
+            defaults={'quantity': quantity}
+        )
+        
+        if not created:
+            cart_item.quantity += int(quantity)
+            cart_item.save()
+        
+        serializer = CartItemSerializer(cart_item)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+# API для Элементов корзины
+class CartItemViewSet(viewsets.ModelViewSet):
+    queryset = CartItem.objects.all()
+    serializer_class = CartItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        # Автоматически привязываем к корзине текущего пользователя
+        cart, _ = Cart.objects.get_or_create(user=self.request.user)
+        serializer.save(cart=cart)
+
+
+# API для Заказов
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Пользователь видит только свои заказы
+        if self.request.user.is_authenticated:
+            return Order.objects.filter(user=self.request.user)
+        return Order.objects.none()
+
+    def perform_create(self, serializer):
+        # Создаем заказ из корзины
+        cart = Cart.objects.filter(user=self.request.user).first()
+        if not cart or not cart.items.exists():
+            raise Exception("Корзина пуста")
+        
+        order = serializer.save(user=self.request.user, total_price=cart.total_price)
+        
+        # Переносим товары из корзины в заказ
+        for cart_item in cart.items.all():
+            OrderItem.objects.create(
+                order=order,
+                product=cart_item.product,
+                quantity=cart_item.quantity,
+                price=cart_item.product.price
+            )
+        
+        # Очищаем корзину
+        cart.items.all().delete()
+
+    @action(detail=True, methods=['patch'])
+    def update_status(self, request, pk=None):
+        """Обновить статус заказа (только для админов)"""
+        if not request.user.is_staff:
+            return Response({'error': 'Только администраторы могут менять статус'}, 
+                          status=status.HTTP_403_FORBIDDEN)
+        
+        order = self.get_object()
+        new_status = request.data.get('status')
+        
+        if new_status not in dict(Order.STATUS_CHOICES):
+            return Response({'error': 'Неверный статус'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        order.status = new_status
+        order.save()
+        
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
+
+
+# API для Элементов заказа
+class OrderItemViewSet(viewsets.ModelViewSet):
+    queryset = OrderItem.objects.all()
+    serializer_class = OrderItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
