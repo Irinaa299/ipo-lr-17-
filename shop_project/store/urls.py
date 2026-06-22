@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+<<<<<<< HEAD
 app_name = 'store'
 
 urlpatterns = [
@@ -9,6 +10,12 @@ urlpatterns = [
     
     # Каталог товаров
     path('catalog/', views.product_list, name='product_list'),
+=======
+urlpatterns = [
+    # Каталог товаров (будет открываться и на главной, и по адресу /catalog/)
+    path('', views.product_list, name='product_list'),
+    path('catalog/', views.product_list, name='catalog_list'),
+>>>>>>> d84a7fc3a4c40612c8e4545f3018aa927d65582c
     
     # Карточка одного товара
     path('catalog/<int:pk>/', views.product_detail, name='product_detail'),
@@ -19,6 +26,12 @@ urlpatterns = [
     path('cart/remove/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/', views.cart_view, name='cart_view'),
 
+<<<<<<< HEAD
     # Страница оформления заказа
     path('checkout/', views.checkout, name='checkout'),
 ]
+=======
+    # Страница оформления заказа для 19-й ЛР
+    path('checkout/', views.checkout, name='checkout'),
+]
+>>>>>>> d84a7fc3a4c40612c8e4545f3018aa927d65582c

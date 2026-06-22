@@ -46,11 +46,19 @@ ROOT_URLCONF = 'shop_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+<<<<<<< HEAD
         'DIRS': [BASE_DIR / 'templates'],  # <-- Эта строка важна!
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
+=======
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',  # Восстановили дебаг-процессор
+>>>>>>> d84a7fc3a4c40612c8e4545f3018aa927d65582c
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -96,6 +104,7 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
+<<<<<<< HEAD
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
@@ -104,6 +113,9 @@ STATICFILES_DIRS = [
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+=======
+STATIC_URL = 'static/'
+>>>>>>> d84a7fc3a4c40612c8e4545f3018aa927d65582c
 LOGIN_URL = '/admin/login/'  # Куда отправлять гостя, если нужна авторизация
 LOGIN_REDIRECT_URL = '/catalog/'  # Куда возвращать пользователя после успешного входа
 # Консольный бэкенд для тестирования отправки писем
