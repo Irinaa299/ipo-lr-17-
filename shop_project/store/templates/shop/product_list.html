@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Магазин спортивных товаров</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 30px; background: #fafafa;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>Каталог спортивных аксессуаров</h1>
+        <a href="{% url 'cart_view' %}" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">🛒 Перейти в корзину</a>
+    </div>
+
+    <!-- Системные уведомления о валидации склада -->
+    {% if messages %}
+        {% for message in messages %}
+            <div style="padding: 10px; margin: 10px 0; border-radius: 4px; background: {% if message.tags == 'error' %}#f8d7da; color: #721c24;{% else %}#d4edda; color: #155724;{% endif %};">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Форма поиска (По названию и описанию через Q-объекты) -->
+    <form method="get" action="" style="margin-bottom: 20px;">
+        <input type="text" name="search" value="{{ search_query }}" placeholder="Поиск по названию и описанию..." style="padding: 8px; width: 300px;">
+        <button type="submit" style="padding: 8px 15px; cursor: pointer;">Найти</button>
+        {% if search_query or selected_category or selected_manufacturer or selected_sort %}
+            <a href="{% url 'catalog_list' %}" style="margin-left: 10px; color: red;">Сбросить фильтры</a>
+        {% endif %}
+    </form>
+
+    <!-- Фильтры -->
+    <div style="background: #fff; padding: 15px; margin-bottom: 20px; border: 1px solid #ddd; display: flex; flex-direction: column; gap: 10px;">
+        <div>
+            <b>Категории:</b>
+            <a href="?manufacturer={{ selected_manufacturer }}&sort={{ selected_sort }}&search={{ search_query }}" style="margin-right: 10px; text-decoration: none; {% if not selected_category %}font-weight: bold; color: black;{% endif %}">Все</a>
+            {% for cat in categories %}
+                <a href="?category={{ cat.id }}&manufacturer={{ selected_manufacturer }}&sort={{ selected_sort }}&search={{ search_query }}" style="margin-right: 10px; text-decoration: none; {% if selected_category == cat.id|slugify %}font-weight: bold; color: black;{% endif %}">
+                    {{ cat.name }}
+                </a>
+            {% endfor %}
+        </div>
+        <div>
+            <b>Производители (Бренды):</b>
+            <a href="?category={{ selected_category }}&sort={{ selected_sort }}&search={{ search_query }}" style="margin-right: 10px; text-decoration: none; {% if not selected_manufacturer %}font-weight: bold; color: black;{% endif %}">Все</a>
+            {% for man in manufacturers %}
+                <a href="?manufacturer={{ man.id }}&category={{ selected_category }}&sort={{ selected_sort }}&search={{ search_query }}" style="margin-right: 10px; text-decoration: none; {% if selected_manufacturer == man.id|slugify %}font-weight: bold; color: black;{% endif %}">
+                    {{ man.name }}
+                </a>
+            {% endfor %}
+        </div>
+        <div>
+            <b>Сортировка цен:</b>
+            <a href="?sort=price_asc&category={{ selected_category }}&manufacturer={{ selected_manufacturer }}&search={{ search_query }}" style="margin-right: 10px; text-decoration: none; {% if selected_sort == 'price_asc' %}font-weight: bold; color: black;{% endif %}">Сначала дешевые</a>
+            <a href="?sort=price_desc&category={{ selected_category }}&manufacturer={{ selected_manufacturer }}&search={{ search_query }}" style="text-decoration: none; {% if selected_sort == 'price_desc' %}font-weight: bold; color: black;{% endif %}">Сначала дорогие</a>
+        </div>
+    </div>
+
+    <!-- Сетка товаров -->
+    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+        {% for product in products %}
+            <div style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; width: 220px; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="margin-top: 0; font-size: 1.1em;">
+                        <a href="{% url 'product_detail' product.pk %}" style="color: #0066cc; text-decoration: none;">{{ product.title }}</a>
+                    </h3>
+                    <p style="font-size: 0.85em; color: #666; margin: 3px 0;">Категория: {{ product.category.name }}</p>
+                    <p style="font-size: 0.85em; color: #666; margin: 3px 0;">Бренд: {{ product.manufacturer.name }}</p>
+                    <p style="font-size: 0.8em; color: #999; margin: 3px 0;">Остаток на складе: {{ product.stock_quantity }} шт.</p>
+                </div>
+                <div>
+                    <h4 style="color: #e44d26; margin: 10px 0;">{{ product.price }} руб.</h4>
+                    <a href="{% url 'add_to_cart' product.id %}" style="display: block; text-align: center; background: #007bff; color: white; padding: 6px; text-decoration: none; border-radius: 4px; font-size: 0.9em; font-weight: bold;">➕ В корзину</a>
+                </div>
+            </div>
+        {% empty %}
+            <p>Товары не найдены.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

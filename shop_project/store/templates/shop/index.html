@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Главная - SportRina Boom{% endblock %}
+
+{% block content %}
+<!-- Hero-секция -->
+<div class="p-5 mb-4 bg-light rounded-3 text-center" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white;">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">
+            <i class="bi bi-trophy"></i> SportRina Boom
+        </h1>
+        <p class="col-md-8 fs-4 mx-auto">Магазин качественных спортивных товаров. Одежда, обувь и инвентарь для твоих побед!</p>
+        <a class="btn btn-light btn-lg" href="/catalog/" role="button">
+            <i class="bi bi-bag"></i> Перейти в каталог
+        </a>
+    </div>
+</div>
+
+<!-- Секция категорий -->
+<h2 class="mb-4 text-center">Категории товаров</h2>
+<div class="row row-cols-2 row-cols-md-4 g-3 mb-5">
+    {% for category in categories %}
+    <div class="col">
+        <a href="/catalog/?category={{ category.id }}" class="text-decoration-none">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <i class="bi bi-box-seam display-4 text-primary"></i>
+                    <h5 class="card-title mt-2">{{ category.name }}</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Секция популярных товаров -->
+<h2 class="mb-4 text-center">Популярные товары</h2>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for product in popular_products %}
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ product.title }}</h5>
+                <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
+                <p class="card-text">
+                    <small class="text-muted">
+                        Категория: {{ product.category.name }}<br>
+                        Бренд: {{ product.manufacturer.name }}
+                    </small>
+                </p>
+                <h4 class="text-primary">{{ product.price }} руб.</h4>
+                <a href="/catalog/{{ product.pk }}/" class="btn btn-outline-primary w-100">
+                    Подробнее
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
